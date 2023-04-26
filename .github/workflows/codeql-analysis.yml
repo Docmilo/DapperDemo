@@ -27,20 +27,23 @@ jobs:
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '7.0.x']
-    steps:
-        - uses: actions/checkout@v3
-        - name: Setup .NET version ${{ matrix.dotnet-version }}
-          uses: actions/setup-dotnet@v3
-          with:
-            dotnet-version:  ${{ matrix.dotnet-version }}
-        - name: Restore dependencies
-          run: dotnet restore
-        - name: Build
-          run: dotnet build --no-restore
-        - uses: actions/upload-artifact@v3
-          with:
-            name: build-artifacts
-            path: build/
+    steps:      
+      - uses: actions/checkout@v2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+      - name: Navigate to Workspace
+        run: cd SQLORM
+      - name: Restore Packages
+        run: nuget restore SQLORM.sln
+      - name: Build Solution
+        run: |
+          msbuild.exe SQLORM.sln /p:platform="Any CPU" /p:configuration="Release"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: build/
 
   analyze:
     needs: Build
